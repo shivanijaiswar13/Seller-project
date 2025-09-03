@@ -70,5 +70,70 @@ async function loginUser(req,res){
 
 }
 
+async function registerSeller(req,res){
+    const{username,email,fullName:{firstName,lastName},password,}= req.body;
+    const isSEllerAlreadyExists = await userModel.findOne({
+        $or: [{username},{email}]
+    })
+    if(isSEllerAlreadyExists){
+        return res.status(422).json({
+            message: isSEllerAlreadyExists.username == username?
+            "username already exists":"email already exists"
+        })
+    }
+    const seller = await userModel.create({
+        username,
+        email,
+        fullName:{
+            firstName,
+            lastName
+        },
+        password,
+        role:"seller"
+    })
+    const token = jwt.sign({id:seller._id},process.env.JWT_SECRET)
+    res.cookie("token",token)
+    res.status(201).json({
+        message:"seller registered successfully",
+        seller:{
+            id:seller._id,
+            username:seller.username,
+            email:seller.email,
+            fullName:seller.fullName,
+            role:seller.role}
+    })
+}
+async function loginSeller(req,res) {
+    const { username, email, password } = req.body;
+    const seller = await userModel.findOne({
+        $or:[{username},{email}]
+    })
+    if(!seller){
+        return res.status(400).json({
+            message:"Invalid credentials"
+        })
 
-module.exports = {registerUser,loginUser};
+    }
+    const isPasswordValid = await bcrypt.compare(password,seller.password)
+    if(!isPasswordValid){
+        return res.status(400).json({
+            message:"Invalid credentials"
+        })
+    }
+    const token = jwt.sign({id:seller._id},process.env.JWT_SECRET)
+    res.cookie("token",token)
+    res.status(200).json({
+        message:"seller logged in successfully",
+        seller:{
+            id:seller._id,
+            username:seller.username,
+            email:seller.email,
+            fullName:seller.fullName,
+
+        }
+    })
+    
+}
+
+
+module.exports = {registerUser,loginUser,registerSeller,loginSeller};
