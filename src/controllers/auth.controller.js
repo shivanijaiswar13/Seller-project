@@ -81,6 +81,7 @@ async function registerSeller(req,res){
             "username already exists":"email already exists"
         })
     }
+    const hash = await bcrypt.hash(password,10);
     const seller = await userModel.create({
         username,
         email,
@@ -88,8 +89,9 @@ async function registerSeller(req,res){
             firstName,
             lastName
         },
-        password,
+        password:hash,
         role:"seller"
+    
     })
     const token = jwt.sign({id:seller._id},process.env.JWT_SECRET)
     res.cookie("token",token)
