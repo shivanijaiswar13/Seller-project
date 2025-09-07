@@ -14,7 +14,6 @@ const router = express.Router();
 router.post("/",authMiddleware.authSeller,
     upload.array("images",5),
     productController.createProduct
-
 )
 
 // GET /seller
